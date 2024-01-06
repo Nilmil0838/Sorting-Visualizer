@@ -88,7 +88,6 @@ def bubble_sort(draw_info, ascending=True):
                 lst[j], lst[j + 1] = lst[j + 1], lst[j]
                 draw_list(draw_info, {j: draw_info.GREEN, j+1: draw_info.RED}, True)
                 yield True
-
     return lst
 
 def main():
