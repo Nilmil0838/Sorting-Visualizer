@@ -43,7 +43,7 @@ def draw(draw_info, algo_name, ascending):
     controls = draw_info.FONT.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending", 1, draw_info.BLACK)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 45))
 
-    sorting = draw_info.FONT.render("I - Insertion Sort | B - Bubble Sort", 1, draw_info.BLACK)
+    sorting = draw_info.FONT.render("I - Insertion Sort | B - Bubble Sort | S - Selection Sort | L - Shell Sort", 1, draw_info.BLACK)
     draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 75))
 
     draw_list(draw_info)
@@ -75,9 +75,14 @@ def draw_list(draw_info, color_positions={}, clear_bg=False):
 
 def generate_starting_list(n, min_val, max_val):
     lst = []
-    for _ in range(n):
-        val = random.randint(min_val, max_val)
-        lst.append(val)
+    #can use min_val and max_val to get a complete randomized list including duplicates
+    #for _ in range(n):
+        #val = random.randint(min_val, max_val)
+        #lst.append(val)
+    while len(lst) != n:
+        val = random.randint(1, n)
+        if val not in lst:
+            lst.append(val)
     return lst
 
 def bubble_sort(draw_info, ascending=True):
@@ -108,26 +113,76 @@ def insertion_sort(draw_info, ascending=True):
             yield True
     return lst
 
+def selection_sort(draw_info, ascending=True):
+    lst = draw_info.lst
+    if ascending:
+        for i in range(0, len(lst)):
+            min_i = i
+            for j in range(i + 1, len(lst)):
+                if lst[j] < lst[min_i]:
+                    min_i = j
+            if min_i != i:
+                lst[i], lst[min_i] = lst[min_i], lst[i]
+                draw_list(draw_info, {i: draw_info.GREEN, min_i: draw_info.RED}, True)
+                yield True
+    else:
+        for i in range(0, len(lst)):
+            min_i = i
+            for j in range(i + 1, len(lst)):
+                if lst[j] > lst[min_i]:
+                    min_i = j
+            if min_i != i:
+                lst[i], lst[min_i] = lst[min_i], lst[i]
+                draw_list(draw_info, {i: draw_info.GREEN, min_i: draw_info.RED}, True)
+                yield True
+    return lst
+
+def shell_sort(draw_info, ascending=True):
+    lst = draw_info.lst
+    length = len(lst)
+    gap = length // 2
+    if ascending:
+        while gap > 0:
+            for iIndex in range(gap, length):
+                temp = lst[iIndex]
+                jIndex = iIndex
+                while jIndex >= gap and lst[jIndex - gap] > temp:
+                    lst[jIndex] = lst[jIndex - gap]
+                    jIndex -= gap
+                    draw_list(draw_info, {jIndex: draw_info.GREEN, jIndex-gap: draw_info.RED}, True)
+                    yield True
+                lst[jIndex] = temp
+            gap //= 2
+    else:
+        while gap > 0:
+            for iIndex in range(gap, length):
+                temp = lst[iIndex]
+                jIndex = iIndex
+                while jIndex >= gap and lst[jIndex - gap] < temp:
+                    lst[jIndex] = lst[jIndex - gap]
+                    jIndex -= gap
+                    draw_list(draw_info, {jIndex: draw_info.GREEN, jIndex-gap: draw_info.RED}, True)
+                    yield True
+                lst[jIndex] = temp
+            gap //= 2
+    return lst
+
 def main():
     run = True
     clock = pygame.time.Clock()
-
     n = 50
     min_val = 0
     max_val = 100
-
     lst = generate_starting_list(n, min_val, max_val)
     draw_info = DrawInformation(800, 600, lst)
     sorting = False
     ascending = True
-
     sorting_algorithm = bubble_sort
     sorting_algo_name = "Bubble Sort"
     sorting_algorithm_generator = None
 
     while run:
         clock.tick(60)
-        
         if sorting:
             try:
                 next(sorting_algorithm_generator)
@@ -140,7 +195,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-
             if event.type != pygame.KEYDOWN:
                 continue
 
@@ -161,6 +215,12 @@ def main():
             elif event.key == pygame.K_b and not sorting:
                 sorting_algorithm = bubble_sort
                 sorting_algo_name = "Bubble Sort"
+            elif event.key == pygame.K_s and not sorting:
+                sorting_algorithm = selection_sort
+                sorting_algo_name = "Selection Sort"
+            elif event.key == pygame.K_l and not sorting:
+                sorting_algorithm = shell_sort
+                sorting_algo_name = "Shell Sort"
     pygame.quit()
 
 if __name__ == "__main__":
