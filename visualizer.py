@@ -43,7 +43,7 @@ def draw(draw_info, algo_name, ascending):
     controls = draw_info.FONT.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending", 1, draw_info.BLACK)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 45))
 
-    sorting = draw_info.FONT.render("I - Insertion Sort | B - Bubble Sort | S - Selection Sort | L - Shell Sort", 1, draw_info.BLACK)
+    sorting = draw_info.FONT.render("1 - Insertion Sort | 2 - Bubble Sort | 3 - Selection Sort | 4 - Shell Sort | 5 - Merge Sort | 6 - Bogo Sort", 1, draw_info.BLACK)
     draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 75))
 
     draw_list(draw_info)
@@ -115,66 +115,91 @@ def insertion_sort(draw_info, ascending=True):
 
 def selection_sort(draw_info, ascending=True):
     lst = draw_info.lst
-    if ascending:
-        for i in range(0, len(lst)):
-            min_i = i
-            for j in range(i + 1, len(lst)):
-                if lst[j] < lst[min_i]:
-                    min_i = j
-            if min_i != i:
-                lst[i], lst[min_i] = lst[min_i], lst[i]
-                draw_list(draw_info, {i: draw_info.GREEN, min_i: draw_info.RED}, True)
-                yield True
-    else:
-        for i in range(0, len(lst)):
-            min_i = i
-            for j in range(i + 1, len(lst)):
-                if lst[j] > lst[min_i]:
-                    min_i = j
-            if min_i != i:
-                lst[i], lst[min_i] = lst[min_i], lst[i]
-                draw_list(draw_info, {i: draw_info.GREEN, min_i: draw_info.RED}, True)
-                yield True
+    for i in range(0, len(lst)):
+        min_i = i
+        for j in range(i + 1, len(lst)):
+            if (lst[j] < lst[min_i] and ascending) or (lst[j] > lst[min_i] and not ascending):
+                min_i = j
+        if min_i != i:
+            lst[i], lst[min_i] = lst[min_i], lst[i]
+            draw_list(draw_info, {i: draw_info.GREEN, min_i: draw_info.RED}, True)
+            yield True
     return lst
 
 def shell_sort(draw_info, ascending=True):
     lst = draw_info.lst
     length = len(lst)
     gap = length // 2
-    if ascending:
-        while gap > 0:
-            for iIndex in range(gap, length):
-                temp = lst[iIndex]
-                jIndex = iIndex
-                while jIndex >= gap and lst[jIndex - gap] > temp:
-                    lst[jIndex] = lst[jIndex - gap]
-                    jIndex -= gap
-                    draw_list(draw_info, {jIndex: draw_info.GREEN, jIndex-gap: draw_info.RED}, True)
-                    yield True
-                lst[jIndex] = temp
-            gap //= 2
-    else:
-        while gap > 0:
-            for iIndex in range(gap, length):
-                temp = lst[iIndex]
-                jIndex = iIndex
-                while jIndex >= gap and lst[jIndex - gap] < temp:
-                    lst[jIndex] = lst[jIndex - gap]
-                    jIndex -= gap
-                    draw_list(draw_info, {jIndex: draw_info.GREEN, jIndex-gap: draw_info.RED}, True)
-                    yield True
-                lst[jIndex] = temp
-            gap //= 2
+    while gap > 0:
+        for i in range(gap, length):
+            temp = lst[i]
+            j = i
+            while j >= gap and ((lst[j - gap] > temp and ascending) 
+                                or (lst[j - gap] < temp and not ascending)):
+                lst[j] = lst[j - gap]
+                j -= gap
+                draw_list(draw_info, {j: draw_info.GREEN, j-gap: draw_info.RED}, True)
+                yield True
+            lst[j] = temp
+        gap //= 2
     return lst
 
+def merge_sort(draw_info, ascending=True):
+    lst = draw_info.lst
+    yield from merge_sort_recursive(draw_info, lst, 0, len(lst) - 1, ascending)
+
+def merge_sort_recursive(draw_info, lst, low, high, ascending):
+    if low < high:
+        mid = (low + high) // 2
+        yield from merge_sort_recursive(draw_info, lst, low, mid, ascending)
+        yield from merge_sort_recursive(draw_info, lst, mid + 1, high, ascending)
+        yield from merge(draw_info, lst, low, mid, high, ascending)
+
+def merge(draw_info, lst, low, mid, high, ascending):
+    left = lst[low:mid + 1]
+    right = lst[mid + 1:high + 1]
+    i = j = 0
+    k = low
+    while i < len(left) and j < len(right):
+        if (left[i] < right[j] and ascending) or (left[i] > right[j] and not ascending):
+            lst[k] = left[i]
+            i += 1
+        else:
+            lst[k] = right[j]
+            j += 1
+        draw_list(draw_info, {i: draw_info.GREEN, j: draw_info.RED}, True)
+        k += 1
+    while i < len(left):
+        lst[k] = left[i]
+        i += 1
+        k += 1
+        draw_list(draw_info, {i: draw_info.GREEN, k: draw_info.RED}, True)
+    while j < len(right):
+        lst[k] = right[j]
+        j += 1
+        k += 1
+        draw_list(draw_info, {j: draw_info.GREEN, k: draw_info.RED}, True)
+    draw_list(draw_info, {low + i: draw_info.GREEN for i in range(len(left))}, True)
+    draw_list(draw_info, {mid + 1 + j: draw_info.RED for j in range(len(right))}, True)
+    yield True
+
+def bogo_sort(draw_info, ascending=True):
+    lst = draw_info.lst
+    sorted_lst = sorted(lst)
+    while lst != sorted_lst:
+        random.shuffle(lst)
+        draw_list(draw_info, {-1: draw_info.GREEN, len(lst): draw_info.RED}, True)
+        yield True
+    return lst
+    
 def main():
     run = True
     clock = pygame.time.Clock()
-    n = 50
+    n = 100
     min_val = 0
     max_val = 100
     lst = generate_starting_list(n, min_val, max_val)
-    draw_info = DrawInformation(800, 600, lst)
+    draw_info = DrawInformation(1600, 1200, lst)
     sorting = False
     ascending = True
     sorting_algorithm = bubble_sort
@@ -209,18 +234,24 @@ def main():
                 ascending = True
             elif event.key == pygame.K_d and not sorting:
                 ascending = False
-            elif event.key == pygame.K_i and not sorting:
+            elif event.key == pygame.K_1 and not sorting:
                 sorting_algorithm = insertion_sort
                 sorting_algo_name = "Insertion Sort"
-            elif event.key == pygame.K_b and not sorting:
+            elif event.key == pygame.K_2 and not sorting:
                 sorting_algorithm = bubble_sort
                 sorting_algo_name = "Bubble Sort"
-            elif event.key == pygame.K_s and not sorting:
+            elif event.key == pygame.K_3 and not sorting:
                 sorting_algorithm = selection_sort
                 sorting_algo_name = "Selection Sort"
-            elif event.key == pygame.K_l and not sorting:
+            elif event.key == pygame.K_4 and not sorting:
                 sorting_algorithm = shell_sort
                 sorting_algo_name = "Shell Sort"
+            elif event.key == pygame.K_5 and not sorting:
+                sorting_algorithm = merge_sort
+                sorting_algo_name = "Merge Sort"
+            elif event.key == pygame.K_6 and not sorting:
+                sorting_algorithm = bogo_sort
+                sorting_algo_name = "Bogo Sort"
     pygame.quit()
 
 if __name__ == "__main__":
