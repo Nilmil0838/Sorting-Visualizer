@@ -135,7 +135,7 @@ def shell_sort(draw_info, ascending=True):
             temp = lst[i]
             j = i
             while j >= gap and ((lst[j - gap] > temp and ascending) 
-                                or (lst[j - gap] < temp and not ascending)):
+                             or (lst[j - gap] < temp and not ascending)):
                 lst[j] = lst[j - gap]
                 j -= gap
                 draw_list(draw_info, {j: draw_info.GREEN, j-gap: draw_info.RED}, True)
@@ -185,8 +185,9 @@ def merge(draw_info, lst, low, mid, high, ascending):
 
 def bogo_sort(draw_info, ascending=True):
     lst = draw_info.lst
-    sorted_lst = sorted(lst)
-    while lst != sorted_lst:
+    asc_sorted_lst = sorted(lst)
+    des_sorted_lst = asc_sorted_lst[::-1]
+    while (lst != asc_sorted_lst and ascending) or (lst != des_sorted_lst and not ascending):
         random.shuffle(lst)
         draw_list(draw_info, {-1: draw_info.GREEN, len(lst): draw_info.RED}, True)
         yield True
@@ -222,7 +223,6 @@ def main():
                 run = False
             if event.type != pygame.KEYDOWN:
                 continue
-
             if event.key == pygame.K_r:
                 lst = generate_starting_list(n, min_val, max_val)
                 draw_info.set_list(lst)
